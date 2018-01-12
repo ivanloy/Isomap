@@ -15,21 +15,48 @@ var blockColorGrid = [];
 
 //Mouse mapped positions
 
-  var mouseMappedX = 0;
-  var mouseMappedY = 0;
-  var mouseMappedZ = 0;
-  var mouseMappedSide = 0; //0: Z, 1: X, 2: Y
+var mouseMappedX = 0;
+var mouseMappedY = 0;
+var mouseMappedZ = 0;
+var mouseMappedSide = 0; //0: Z, 1: X, 2: Y
 
 //-----------------------
+
+//Control stuff
+
+var frameCount = 0;
+var frameAcc = 0;
+
+//-------------
+
+//Player stuff
+
+var playerX = 0;
+var playerY = 0;
+var playerZ = 0;
+
+//------------
 
 function setup() {
 
   pixelDensity(1);
+  frameRate(30);
 
   createCanvas(1000,600);
-
+  fill(255);
   //Grid stuff
   colorMode(HSB);
+
+  for(i = 0; i < 15; i++){
+    for(j = 0; j < 15; j++){
+      for(k = 0; k < 5; k++){
+
+      blockGrid[i][j][0] = 0;
+
+      }
+    }
+  }
+
   for(i = 0; i < 15; i++){
 
     blockGrid[i] = [];
@@ -38,13 +65,15 @@ function setup() {
 
       blockGrid[i][j] = [];
 
-      for(k = 1; k < 4; k++){
+      for(k = 1; k < 5; k++){
 
         blockGrid[i][j][k] = 1;
 
       }
     }
   }
+
+
 
   for(i = 0; i < 15; i++){
 
@@ -54,7 +83,7 @@ function setup() {
 
       blockColorGrid[i][j] = [];
 
-      for(k = 0; k < 4; k++){
+      for(k = 0; k < 5; k++){
 
         blockColorGrid[i][j][k] = random(38,41);
 
@@ -91,7 +120,7 @@ function draw() {
 
   for(i = 0; i < 15; i++){
     for(j = 0; j < 15; j++){
-      for(k = 3; k >= 0; k--){
+      for(k = 4; k >= 0; k--){
 
         if(blockGrid[i][j][k] == 1){
 
@@ -100,9 +129,9 @@ function draw() {
           xColor = color(i*3 + 1, j*3 + 1, k*3 + 1, 255);
           yColor = color(i*3 + 2, j*3 + 2, k*3 + 2, 255);
 
-          drawSideZ(i, j, k, zColor);
-          drawSideY(i, j, k, yColor);
-          drawSideX(i, j, k, xColor);
+          if(i == 14 || (blockGrid[i+1][j][k] == 0)) drawSideX(i, j, k, xColor);
+          if(j == 14 || (blockGrid[i][j+1][k] == 0)) drawSideY(i, j, k, yColor);
+          if(k == 0 || (k > 0 && blockGrid[i][j][k-1] == 0)) drawSideZ(i, j, k, zColor);
 
         }
       }
@@ -125,7 +154,7 @@ function draw() {
 
   for(i = 0; i < 15; i++){
     for(j = 0; j < 15; j++){
-      for(k = 3; k >= 0; k--){
+      for(k = 4; k >= 0; k--){
 
         if(blockGrid[i][j][k] == 1){
 
@@ -144,12 +173,26 @@ function draw() {
     }
   }
 
+  while(playerZ < 3 && blockGrid[playerX][playerY][playerZ+1] == 0) playerZ++;
+
   colorMode(RGB);
+  text(playerZ, 100, 50);
+  drawSideX(playerX, playerY, playerZ, color(255, 0, 0));
+  drawSideY(playerX, playerY, playerZ, color(155, 0, 0));
+  drawSideZ(playerX, playerY, playerZ, color(205, 0, 0));
+
   yellow = color(255, 255, 0, 100);
 
   if(mouseMappedSide == 0) drawSideZ(mouseMappedX, mouseMappedY, mouseMappedZ, yellow);
   else if(mouseMappedSide == 1) drawSideX(mouseMappedX, mouseMappedY, mouseMappedZ, yellow);
   else if(mouseMappedSide == 2) drawSideY(mouseMappedX, mouseMappedY, mouseMappedZ, yellow);
+
+  fill(255);
+  text(int(frameRate()), 10, 10);
+  frameAcc += frameRate();
+  frameCount ++;
+  text("avg: " + int(frameAcc / frameCount), 30, 10);
+  text("x: " + mouseMappedX + "  y: " + mouseMappedY + "  z: " + mouseMappedZ, 10, 30);
 
 }
 
@@ -246,8 +289,41 @@ function mousePressed(){
 
 function keyPressed(){
 
-  if(mouseMappedSide == 0 && mouseMappedZ > 0) blockGrid[mouseMappedX][mouseMappedY][mouseMappedZ - 1] = 1;
-  else if(mouseMappedSide == 1) blockGrid[mouseMappedX + 1][mouseMappedY][mouseMappedZ] = 1;
-  else if(mouseMappedSide == 2) blockGrid[mouseMappedX][mouseMappedY + 1][mouseMappedZ] = 1;
+  if(key == "X"){
+
+    if(mouseMappedSide == 0 && mouseMappedZ > 0) blockGrid[mouseMappedX][mouseMappedY][mouseMappedZ - 1] = 1;
+    else if(mouseMappedSide == 1) blockGrid[mouseMappedX + 1][mouseMappedY][mouseMappedZ] = 1;
+    else if(mouseMappedSide == 2) blockGrid[mouseMappedX][mouseMappedY + 1][mouseMappedZ] = 1;
+
+  }
+
+  if(key == "D"){
+
+    if(playerX < 14) playerX++;
+    while(playerZ > 0 && blockGrid[playerX][playerY][playerZ] == 1) playerZ--;
+
+  }
+
+  if(key == "A"){
+
+    if(playerX > 0) playerX--;
+    while(playerZ > 0 && blockGrid[playerX][playerY][playerZ] == 1) playerZ--;
+
+  }
+
+  if(key == "W"){
+
+    if(playerY >0) playerY--;
+    while(playerZ > 0 && blockGrid[playerX][playerY][playerZ] == 1) playerZ--;
+
+  }
+
+  if(key == "S"){
+
+    if(playerY < 14) playerY++;
+    while(playerZ > 0 && blockGrid[playerX][playerY][playerZ] == 1) playerZ--;
+
+  }
+
 
 }
