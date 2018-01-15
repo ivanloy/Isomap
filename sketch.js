@@ -3,6 +3,10 @@
 const BLOCK_SIZE_X = 64;
 const BLOCK_SIZE_Y = 32;
 const BLOCK_HEIGHT = 38;
+const MAP_WIDTH_X = 10;
+const MAP_WIDTH_Y = 10;
+const MAP_HEIGHT = 15;
+const Y_OFF = 150
 
 //-------
 
@@ -37,6 +41,12 @@ var playerZ = 0;
 
 //------------
 
+function preload(){
+
+  //img = loadImage("tileFea.png");
+
+}
+
 function setup() {
 
   pixelDensity(1);
@@ -47,25 +57,25 @@ function setup() {
   //Grid stuff
   colorMode(HSB);
 
-  for(i = 0; i < 15; i++){
-    for(j = 0; j < 15; j++){
-      for(k = 0; k < 5; k++){
+  for(i = 0; i < MAP_WIDTH_X; i++){
 
-      blockGrid[i][j][0] = 0;
+    blockGrid[i] = [];
+
+    for(j = 0; j < MAP_WIDTH_Y; j++){
+
+      blockGrid[i][j] = [];
+
+      for(k = 0; k < MAP_HEIGHT; k++){
+
+      blockGrid[i][j][k] = 0;
 
       }
     }
   }
 
-  for(i = 0; i < 15; i++){
-
-    blockGrid[i] = [];
-
-    for(j = 0; j < 15; j++){
-
-      blockGrid[i][j] = [];
-
-      for(k = 1; k < 5; k++){
+  for(i = 0; i < MAP_WIDTH_X; i++){
+    for(j = 0; j < MAP_WIDTH_Y; j++){
+      for(k = 4; k < MAP_HEIGHT; k++){
 
         blockGrid[i][j][k] = 1;
 
@@ -74,18 +84,20 @@ function setup() {
   }
 
 
+  var xOffPerlin = 0;
+  var colorChange = 8;
 
-  for(i = 0; i < 15; i++){
+  for(i = 0; i < MAP_WIDTH_X; i++){
 
     blockColorGrid[i] = [];
 
-    for(j = 0; j < 15; j++){
+    for(j = 0; j < MAP_WIDTH_Y; j++){
 
       blockColorGrid[i][j] = [];
 
-      for(k = 0; k < 5; k++){
+      for(k = 0; k < MAP_HEIGHT; k++){
 
-        blockColorGrid[i][j][k] = random(38,41);
+        blockColorGrid[i][j][k] = noise(i/colorChange, j/colorChange, k/colorChange)*25 + map((i+j), 0, 15+15+5*2, 0, 1)*80 + (MAP_HEIGHT-k) + 10;
 
       }
     }
@@ -95,7 +107,7 @@ function setup() {
 
   for(i = 4; i < 7; i++){
     for(j = 5; j < 10; j++){
-      for(k = 1; k < 3; k++){
+      for(k = 4; k < MAP_HEIGHT-1; k++){
 
         blockGrid[i][j][k] = 0;
 
@@ -118,9 +130,9 @@ function draw() {
 
   //Map mouse position with color key map
 
-  for(i = 0; i < 15; i++){
-    for(j = 0; j < 15; j++){
-      for(k = 4; k >= 0; k--){
+  for(i = 0; i < MAP_WIDTH_X; i++){
+    for(j = 0; j < MAP_WIDTH_Y; j++){
+      for(k = MAP_HEIGHT - 1; k >= 0; k--){
 
         if(blockGrid[i][j][k] == 1){
 
@@ -129,8 +141,8 @@ function draw() {
           xColor = color(i*3 + 1, j*3 + 1, k*3 + 1, 255);
           yColor = color(i*3 + 2, j*3 + 2, k*3 + 2, 255);
 
-          if(i == 14 || (blockGrid[i+1][j][k] == 0)) drawSideX(i, j, k, xColor);
-          if(j == 14 || (blockGrid[i][j+1][k] == 0)) drawSideY(i, j, k, yColor);
+          if(i == MAP_WIDTH_X-1 || (blockGrid[i+1][j][k] == 0)) drawSideX(i, j, k, xColor);
+          if(j == MAP_WIDTH_Y-1 || (blockGrid[i][j+1][k] == 0)) drawSideY(i, j, k, yColor);
           if(k == 0 || (k > 0 && blockGrid[i][j][k-1] == 0)) drawSideZ(i, j, k, zColor);
 
         }
@@ -152,9 +164,9 @@ function draw() {
 
   //--------------------------------------
 
-  for(i = 0; i < 15; i++){
-    for(j = 0; j < 15; j++){
-      for(k = 4; k >= 0; k--){
+  for(i = 0; i < MAP_WIDTH_X; i++){
+    for(j = 0; j < MAP_WIDTH_Y; j++){
+      for(k = MAP_HEIGHT - 1; k >= 0; k--){
 
         if(blockGrid[i][j][k] == 1){
 
@@ -176,10 +188,10 @@ function draw() {
   while(playerZ < 3 && blockGrid[playerX][playerY][playerZ+1] == 0) playerZ++;
 
   colorMode(RGB);
-  text(playerZ, 100, 50);
-  drawSideX(playerX, playerY, playerZ, color(255, 0, 0));
-  drawSideY(playerX, playerY, playerZ, color(155, 0, 0));
-  drawSideZ(playerX, playerY, playerZ, color(205, 0, 0));
+  //text(playerZ, 100, 50);
+  //drawSideX(playerX, playerY, playerZ, color(255, 0, 0));
+  //drawSideY(playerX, playerY, playerZ, color(155, 0, 0));
+  //drawSideZ(playerX, playerY, playerZ, color(205, 0, 0));
 
   yellow = color(255, 255, 0, 100);
 
@@ -215,10 +227,10 @@ function drawSideZ(x, y, z, col){
 
     beginShape();
 
-      vertex(BLOCK_SIZE_X * (x/2 - y/2) + width/2, z * BLOCK_HEIGHT - z + 10 + BLOCK_SIZE_Y * (x/2 + y/2));
-      vertex(BLOCK_SIZE_X * ((x+1)/2 - y/2) + width/2, z * BLOCK_HEIGHT - z + 10 + BLOCK_SIZE_Y * ((x+1)/2 + y/2));
-      vertex(BLOCK_SIZE_X * ((x+1)/2 - (y+1)/2) + width/2, z * BLOCK_HEIGHT - z + 10 + BLOCK_SIZE_Y * ((x+1)/2 + (y+1)/2));
-      vertex(BLOCK_SIZE_X * (x/2 - (y+1)/2) + width/2, z * BLOCK_HEIGHT - z + 10 + BLOCK_SIZE_Y * (x/2 + (y+1)/2));
+      vertex(BLOCK_SIZE_X * (x/2 - y/2) + width/2, z * BLOCK_HEIGHT - z + 10 + BLOCK_SIZE_Y * (x/2 + y/2) - Y_OFF);
+      vertex(BLOCK_SIZE_X * ((x+1)/2 - y/2) + width/2, z * BLOCK_HEIGHT - z + 10 + BLOCK_SIZE_Y * ((x+1)/2 + y/2) - Y_OFF);
+      vertex(BLOCK_SIZE_X * ((x+1)/2 - (y+1)/2) + width/2, z * BLOCK_HEIGHT - z + 10 + BLOCK_SIZE_Y * ((x+1)/2 + (y+1)/2) - Y_OFF);
+      vertex(BLOCK_SIZE_X * (x/2 - (y+1)/2) + width/2, z * BLOCK_HEIGHT - z + 10 + BLOCK_SIZE_Y * (x/2 + (y+1)/2) - Y_OFF);
 
     endShape();
 
@@ -243,10 +255,10 @@ function drawSideX(x, y, z, col){
 
     beginShape();
 
-     vertex(BLOCK_SIZE_X * ((x+1)/2 - y/2) + width/2, z * BLOCK_HEIGHT - z + 10 + BLOCK_SIZE_Y * ((x+1)/2 + y/2));
-     vertex(BLOCK_SIZE_X * ((x+1)/2 - (y+1)/2) + width/2, z * BLOCK_HEIGHT - z + 10 + BLOCK_SIZE_Y * ((x+1)/2 + (y+1)/2));
-     vertex(BLOCK_SIZE_X * ((x+1)/2 - (y+1)/2) + width/2, (z + 1) * BLOCK_HEIGHT  + 10 + BLOCK_SIZE_Y * ((x+1)/2 + (y+1)/2));
-     vertex(BLOCK_SIZE_X * ((x+1)/2 - y/2) + width/2, (z + 1) * BLOCK_HEIGHT  + 10 + BLOCK_SIZE_Y * ((x+1)/2 + y/2));
+     vertex(BLOCK_SIZE_X * ((x+1)/2 - y/2) + width/2, z * BLOCK_HEIGHT - z + 10 + BLOCK_SIZE_Y * ((x+1)/2 + y/2) - Y_OFF);
+     vertex(BLOCK_SIZE_X * ((x+1)/2 - (y+1)/2) + width/2, z * BLOCK_HEIGHT - z + 10 + BLOCK_SIZE_Y * ((x+1)/2 + (y+1)/2) - Y_OFF);
+     vertex(BLOCK_SIZE_X * ((x+1)/2 - (y+1)/2) + width/2, (z + 1) * BLOCK_HEIGHT  + 10 + BLOCK_SIZE_Y * ((x+1)/2 + (y+1)/2) - Y_OFF);
+     vertex(BLOCK_SIZE_X * ((x+1)/2 - y/2) + width/2, (z + 1) * BLOCK_HEIGHT  + 10 + BLOCK_SIZE_Y * ((x+1)/2 + y/2) - Y_OFF);
 
    endShape();
 
@@ -271,10 +283,10 @@ function drawSideY(x, y, z, col){
 
     beginShape();
 
-      vertex(BLOCK_SIZE_X * ((x+1)/2 - (y+1)/2) + width/2, z * BLOCK_HEIGHT - z + 10 + BLOCK_SIZE_Y * ((x+1)/2 + (y+1)/2));
-      vertex(BLOCK_SIZE_X * (x/2 - (y+1)/2) + width/2, z * BLOCK_HEIGHT - z + 10 + BLOCK_SIZE_Y * (x/2 + (y+1)/2));
-      vertex(BLOCK_SIZE_X * (x/2 - (y+1)/2) + width/2, (z + 1) * BLOCK_HEIGHT  + 10 + BLOCK_SIZE_Y * (x/2 + (y+1)/2));
-      vertex(BLOCK_SIZE_X * ((x+1)/2 - (y+1)/2) + width/2, (z + 1) * BLOCK_HEIGHT  + 10 + BLOCK_SIZE_Y * ((x+1)/2 + (y+1)/2));
+      vertex(BLOCK_SIZE_X * ((x+1)/2 - (y+1)/2) + width/2, z * BLOCK_HEIGHT - z + 10 + BLOCK_SIZE_Y * ((x+1)/2 + (y+1)/2) - Y_OFF);
+      vertex(BLOCK_SIZE_X * (x/2 - (y+1)/2) + width/2, z * BLOCK_HEIGHT - z + 10 + BLOCK_SIZE_Y * (x/2 + (y+1)/2) - Y_OFF);
+      vertex(BLOCK_SIZE_X * (x/2 - (y+1)/2) + width/2, (z + 1) * BLOCK_HEIGHT  + 10 + BLOCK_SIZE_Y * (x/2 + (y+1)/2) - Y_OFF);
+      vertex(BLOCK_SIZE_X * ((x+1)/2 - (y+1)/2) + width/2, (z + 1) * BLOCK_HEIGHT  + 10 + BLOCK_SIZE_Y * ((x+1)/2 + (y+1)/2) - Y_OFF);
 
 
     endShape();
